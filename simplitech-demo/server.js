@@ -60,7 +60,15 @@ app.post('/api/sms', async (req, res) => {
     return res.status(500).json({ error: 'Server is missing INFOBIP_API_KEY — set it in the Render dashboard under Environment.' });
   }
 
-  const message = { destinations: [{ to: to.replace(/[^\d+]/g, '') }], text };
+  // Some Infobip accounts validate this endpoint against the newer unified
+  // "Messages API" shape, which wants the text wrapped in "content" rather
+  // than as a bare "text" field. Sending it in every shape Infobip's SMS
+  // API has used avoids guessing wrong twice.
+  const message = {
+    destinations: [{ to: to.replace(/[^\d+]/g, '') }],
+    text,
+    content: { text, body: { text } },
+  };
   if (SMS_SENDER_ID) message.from = SMS_SENDER_ID;
 
   try {
