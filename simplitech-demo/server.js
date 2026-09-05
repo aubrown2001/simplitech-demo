@@ -71,6 +71,7 @@ app.post('/api/sms', async (req, res) => {
     });
     const { data, raw } = await safeReadJson(infobipRes);
     if (!infobipRes.ok || !data) {
+      console.error('Infobip rejected the request:', infobipRes.status, raw);
       return res.status(infobipRes.status || 502).json({
         error: data?.requestError?.serviceException?.text || 'Infobip rejected the request.',
         details: data || raw,
@@ -106,6 +107,7 @@ app.post('/api/whatsapp', async (req, res) => {
     });
     const { data, raw } = await safeReadJson(infobipRes);
     if (!infobipRes.ok || !data) {
+      console.error('Infobip rejected the request:', infobipRes.status, raw);
       return res.status(infobipRes.status || 502).json({
         error: data?.requestError?.serviceException?.text || 'Infobip rejected the request.',
         details: data || raw,
