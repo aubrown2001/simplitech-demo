@@ -375,8 +375,11 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ to, text }),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+            const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const detail = data.details ? (typeof data.details === 'string' ? data.details : JSON.stringify(data.details)) : '';
+        throw new Error((data.error || `Request failed (${res.status})`) + (detail ? '\n\nDetails: ' + detail : ''));
+      }
       window.alert((kind === 'sms' ? 'Text' : 'WhatsApp message') + ' sent to ' + to + '!');
     } catch (err) {
       window.alert("Couldn't send: " + err.message);
