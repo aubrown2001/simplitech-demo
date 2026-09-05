@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 3000;
 const INFOBIP_API_KEY = process.env.INFOBIP_API_KEY; // e.g. "App 93965bba...898f"
 const SMS_BASE_URL = process.env.INFOBIP_SMS_URL || 'https://rk8yye.api.infobip.com/sms/3/messages';
 const WHATSAPP_BASE_URL = process.env.INFOBIP_WHATSAPP_URL || 'https://rk8yye.api.infobip.com/whatsapp/1/message/text';
-const SMS_SENDER_ID = process.env.SMS_SENDER_ID || ''; // optional, leave blank to omit
+const SMS_SENDER_ID = process.env.SMS_SENDER_ID || '10950'; // confirmed working sender from Postman
 const WHATSAPP_SENDER = process.env.WHATSAPP_SENDER || '447860099299';
 
 function infobipHeaders() {
@@ -60,16 +60,13 @@ app.post('/api/sms', async (req, res) => {
     return res.status(500).json({ error: 'Server is missing INFOBIP_API_KEY — set it in the Render dashboard under Environment.' });
   }
 
-  // Some Infobip accounts validate this endpoint against the newer unified
-  // "Messages API" shape, which wants the text wrapped in "content" rather
-  // than as a bare "text" field. Sending it in every shape Infobip's SMS
-  // API has used avoids guessing wrong twice.
+  // Matches the exact shape confirmed working via Postman on this account:
+  // "sender" (not "from"), and content.text (not a bare "text" field).
   const message = {
     destinations: [{ to: to.replace(/[^\d+]/g, '') }],
-    text,
-    content: { text, body: { text } },
+    sender: SMS_SENDER_ID,
+    content: { text },
   };
-  if (SMS_SENDER_ID) message.from = SMS_SENDER_ID;
 
   try {
     const infobipRes = await fetch(SMS_BASE_URL, {
@@ -85,6 +82,7 @@ app.post('/api/sms', async (req, res) => {
         details: data || raw,
       });
     }
+    console.log('Infobip accepted the SMS request, response:', JSON.stringify(data));
     res.json({ ok: true, infobip: data });
   } catch (err) {
     console.error('SMS send failed:', err);
